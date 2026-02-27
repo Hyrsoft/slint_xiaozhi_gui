@@ -1,0 +1,219 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    width: 400px;
+    height: 600px;
+    title: "Xiaozhi AI";
+    background: #f0f8ff;
+    default-font-family: "Hiragino Sans GB";
+
+    // Properties exposed to Rust
+    in property <int> device_state: 3;
+    in property <string> activation_code: "";
+    in property <string> subtitle_text: "";
+    in property <string> toast_text: "";
+
+    // Callbacks exposed to Rust
+    callback interrupt_clicked();
+
+    // Main Layout
+    VerticalLayout {
+        padding: 20px;
+        spacing: 12px;
+
+        // ── Top Bar: Connection + Activation Code ──
+        HorizontalLayout {
+            height: 36px;
+            alignment: space-between;
+
+            // Connection pill
+            Rectangle {
+                width: 110px;
+                border-radius: 18px;
+                background: device_state == 4 ? #ff6b6b : #51cf66;
+                animate background { duration: 300ms; }
+
+                Text {
+                    text: device_state == 4 ? "❌ 已断开" : "✅ 在线";
+                    color: white;
+                    font-weight: 700;
+                    font-size: 13px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+
+            // Activation code badge
+            Rectangle {
+                width: 140px;
+                border-radius: 10px;
+                background: #fff3bf;
+                visible: activation_code != "";
+                Text {
+                    text: "激活码: " + activation_code;
+                    color: #e67700;
+                    font-weight: 800;
+                    font-size: 13px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        // ── Status Bar: Dedicated state display ──
+        Rectangle {
+            height: 40px;
+            border-radius: 12px;
+            background: device_state == 5 ? #d3f9d8 : device_state == 6 ? #d0ebff : device_state == 4 ? #ffe3e3 : #e7f5ff;
+            animate background { duration: 300ms; }
+
+            HorizontalLayout {
+                alignment: center;
+                spacing: 8px;
+
+                // Animated dot indicator
+                Rectangle {
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 6px;
+                    background: device_state == 5 ? #2b8a3e : device_state == 6 ? #1971c2 : device_state == 4 ? #e03131 : #1098ad;
+                    animate background { duration: 300ms; }
+                }
+
+                Text {
+                    text: device_state == 5 ? "🎤 正在倾听..." : device_state == 6 ? "🔊 正在说话..." : device_state == 4 ? "⚠️ 连接断开" : "😊 待机空闲";
+                    color: #343a40;
+                    font-size: 15px;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        // ── Middle Area: Avatar / Face ──
+        Rectangle {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            background: white;
+            border-radius: 30px;
+            border-width: 4px;
+            border-color: device_state == 5 ? #51cf66 : device_state == 6 ? #74c0fc : device_state == 4 ? #ff8787 : #74c0fc;
+            animate border-color { duration: 300ms; }
+            clip: true;
+
+            TouchArea {
+                clicked => {
+                    root.interrupt_clicked();
+                }
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                vertical-stretch: 1;
+
+                VerticalLayout {
+                    alignment: center;
+
+                    // Eyes
+                    HorizontalLayout {
+                        spacing: 60px;
+                        alignment: center;
+                        height: 50px;
+
+                        Rectangle {
+                            width: 30px;
+                            height: device_state == 4 ? 5px : (device_state == 5 ? 40px : 30px);
+                            border-radius: 15px;
+                            background: #343a40;
+                            animate height {
+                                duration: 250ms;
+                                easing: ease-in-out-bounce;
+                            }
+                        }
+
+                        Rectangle {
+                            width: 30px;
+                            height: device_state == 4 ? 5px : (device_state == 5 ? 40px : 30px);
+                            border-radius: 15px;
+                            background: #343a40;
+                            animate height {
+                                duration: 250ms;
+                                easing: ease-in-out-bounce;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        height: 30px;
+                    }
+
+                    // Mouth
+                    Rectangle {
+                        width: device_state == 6 ? 60px : (device_state == 5 ? 20px : 40px);
+                        height: device_state == 6 ? 40px : (device_state == 4 ? 10px : 15px);
+                        border-radius: self.height / 2;
+                        background: #fa5252;
+                        animate width {
+                            duration: 200ms;
+                            easing: ease-in-out;
+                        }
+                        animate height {
+                            duration: 200ms;
+                            easing: ease-in-out;
+                        }
+                    }
+                }
+            }
+
+            // Listening green dot
+            if device_state == 5: Rectangle {
+                x: 20px;
+                y: 20px;
+                width: 20px;
+                height: 20px;
+                border-radius: 10px;
+                background: #3cc36e;
+            }
+        }
+
+        // ── Toast Area (short notifications) ──
+        if toast_text != "": Rectangle {
+            height: 32px;
+            border-radius: 8px;
+            background: #fff9db;
+            border-width: 1px;
+            border-color: #ffd43b;
+
+            Text {
+                text: "💬 " + toast_text;
+                color: #e67700;
+                font-size: 13px;
+                font-weight: 600;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        // ── Bottom Area: TTS Subtitle Display ──
+        Rectangle {
+            height: 90px;
+            border-radius: 15px;
+            background: #ffffff;
+            border-width: 2px;
+            border-color: #ffe066;
+
+            Text {
+                x: 15px;
+                y: 10px;
+                width: parent.width - 30px;
+                height: parent.height - 20px;
+                text: subtitle_text != "" ? subtitle_text : "等待对话...";
+                color: #495057;
+                font-size: 15px;
+                wrap: word-wrap;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+            }
+        }
+    }
+}
