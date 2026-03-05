@@ -3,6 +3,10 @@ name = "slint_xiaozhi_gui"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = []
+embedded = ["slint/backend-linuxkms-noseat", "slint/renderer-software"]
+
 [dependencies]
 slint = "1.9"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }

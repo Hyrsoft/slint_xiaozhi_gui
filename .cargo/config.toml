@@ -1,0 +1,5 @@
+# 交叉编译配置
+# 使用 cross 工具时会自动处理链接器，此文件仅作为备用手动配置参考
+
+[target.armv7-unknown-linux-musleabihf]
+linker = "arm-linux-musleabihf-gcc"

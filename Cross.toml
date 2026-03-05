@@ -1,0 +1,7 @@
+[target.armv7-unknown-linux-musleabihf]
+# cross 的 Docker 镜像已包含 musl 工具链
+# 如果需要额外的系统库（如 libdrm、libgbm、libinput），可在此添加 pre-build 命令
+pre-build = [
+    "dpkg --add-architecture armhf",
+    "apt-get update && apt-get install -y libdrm-dev:armhf libgbm-dev:armhf libinput-dev:armhf libudev-dev:armhf libxkbcommon-dev:armhf"
+]

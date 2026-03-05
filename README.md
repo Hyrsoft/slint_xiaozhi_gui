@@ -59,6 +59,50 @@ cargo run
 cargo build --release
 ```
 
+## 嵌入式交叉编译 (ARM Linux + DRM/KMS)
+
+本项目支持使用 [cross](https://github.com/cross-rs/cross) 交叉编译到嵌入式 ARM Linux 设备，生成 musl 静态链接的二进制文件，使用 DRM/KMS 直接渲染到屏幕（无需 X11/Wayland）。
+
+### 1. 安装前置依赖
+
+```bash
+# 安装 Docker（cross 依赖 Docker 容器进行交叉编译）
+# 参考: https://docs.docker.com/get-docker/
+
+# 安装 cross
+cargo install cross --git https://github.com/cross-rs/cross
+
+# 添加 Rust 目标
+rustup target add armv7-unknown-linux-musleabihf
+```
+
+### 2. 编译
+
+```bash
+# 使用一键脚本
+./cross_build.sh          # 默认 release 模式
+./cross_build.sh debug    # debug 模式
+
+# 或手动执行
+cross build --target armv7-unknown-linux-musleabihf \
+    --features embedded --no-default-features --release
+```
+
+### 3. 部署与运行
+
+```bash
+# 将编译产物复制到设备
+scp target/armv7-unknown-linux-musleabihf/release/slint_xiaozhi_gui user@device:/path/to/
+
+# 在设备上运行（全屏 DRM/KMS 渲染）
+SLINT_FULLSCREEN=1 ./slint_xiaozhi_gui
+
+# 指定 DRM 设备（默认 /dev/dri/card0）
+SLINT_FULLSCREEN=1 DRM_DEVICE=/dev/dri/card0 ./slint_xiaozhi_gui
+```
+
+> **提示**：运行时需要对 `/dev/dri/card0` 有读写权限，通常需要将用户加入 `video` 组或使用 `sudo`。
+
 ## 协议
 
 本项目基于 **GPL-3.0** 许可证开源。请参阅项目根目录下的 [LICENSE](LICENSE) 文件了解更多详情。
